@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use AoC2023::reader;
 
 struct AlmanacMap {
@@ -8,9 +7,10 @@ struct AlmanacMap {
 }
 
 fn main() {
-    let input = reader::read_input("input/debug5_1.txt").unwrap();
+    let input = reader::read_input("input/day5.txt").unwrap();
     let part1 = day5_part1(&input);
-    println!("Part 1:{}", part1);
+    let part2 =  day5_part2(&input);
+    println!("Part 1:{}\nPart 2:{}",  part1, part2);
 }
 
 fn day5_part1(input: &Vec<String>) -> i64 {
@@ -32,30 +32,63 @@ fn day5_part1(input: &Vec<String>) -> i64 {
     map_vec.push(light_to_temperature);
     map_vec.push(temperature_to_humidity);
     map_vec.push(humidity_to_location);
-    let mut destinations: Vec<(i64, Vec<i64>)> = Vec::new();
-    for seed in seeds {
-        let mut destination_list: Vec<i64> = Vec::new();
-        let mut source = seed;
-        for map in &map_vec {
-           source= find_destination(&source, &map);
-           destination_list.push(source);
-        }
-        destinations.push((seed, destination_list));
-    }
-    //now search for the min
     let mut min_val = i64::MAX;
-    for d in destinations {
-        let (_, list) = d;
-        let destination = list.last().unwrap();
-        if *destination < min_val {
-            min_val = *destination;
+    for seed in seeds {
+        let mut destination = seed;
+        for map in &map_vec {
+           destination= find_destination(&destination, &map);
+        }
+        if destination < min_val {
+            min_val = destination;
         }
     }
     min_val
 }
 
 fn day5_part2(input: &Vec<String>) -> i64 {
+    let (
+        seeds,
+        seed_to_soil,
+        soil_to_fertilizer,
+        fertilizer_to_water,
+        water_to_light,
+        light_to_temperature,
+        temperature_to_humidity,
+        humidity_to_location,
+    ) = parse_input(&input);
+    let new_seeds: Vec<i64> = get_part2_seeds(&seeds);
+    let mut map_vec:Vec<Vec<AlmanacMap>> = Vec::new();
+    map_vec.push(seed_to_soil);
+    map_vec.push(soil_to_fertilizer);
+    map_vec.push(fertilizer_to_water);
+    map_vec.push(water_to_light);
+    map_vec.push(light_to_temperature);
+    map_vec.push(temperature_to_humidity);
+    map_vec.push(humidity_to_location);
+    let mut min_val = i64::MAX;
+    for seed in new_seeds {
+        let mut destination = seed;
+        for map in &map_vec {
+           destination= find_destination(&destination, &map);
+        }
+        if destination < min_val {
+            min_val = destination;
+        }
+    }
+    min_val
+}
 
+fn get_part2_seeds(seeds: &[i64]) -> Vec<i64> {
+    //If the index is even it's the seed number, if it's not, it's the range
+    let mut new_seeds: Vec<i64> = Vec::new();
+    for i in 0..seeds.len() {
+        if i % 2 == 0 {
+            for j in 0..seeds[i+1] {
+                new_seeds.push(seeds[i] + j);
+            }
+        }
+    }
+    new_seeds
 }
 
 fn parse_input(
